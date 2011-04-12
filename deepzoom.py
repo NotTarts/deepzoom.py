@@ -337,9 +337,11 @@ class ImageCreator(object):
         if self.descriptor.width == width and self.descriptor.height == height:
             return self.image
         if (self.resize_filter is None) or (self.resize_filter not in RESIZE_FILTERS):
-            return self.image.resize((width, height), PIL.Image.ANTIALIAS)
-        return self.image.resize((width, height), RESIZE_FILTERS[self.resize_filter])
-
+	    self.image = self.image.resize((width, height), PIL.Image.ANTIALIAS)
+            return self.image
+	self.image = self.image.resize((width, height), RESIZE_FILTERS[self.resize_filter])
+        return self.image
+    
     def tiles(self, level):
         """Iterator for all tiles in the given level. Returns (column, row) of a tile."""
         columns, rows = self.descriptor.get_num_tiles(level)
@@ -358,7 +360,8 @@ class ImageCreator(object):
                                                   tile_format=self.tile_format)
         # Create tiles
         image_files = _get_or_create_path(_get_files_path(destination))
-        for level in xrange(self.descriptor.num_levels):
+        for level in reversed(xrange(self.descriptor.num_levels)):
+            print 'Creating level ' + str(level)
             level_dir = _get_or_create_path(os.path.join(image_files, str(level)))
             level_image = self.get_image(level)
             for (column, row) in self.tiles(level):
